@@ -3,4 +3,3 @@
  * As classes deste pacote representam o estado dos usuários e estruturas de dados.
  */
 package br.ufal.ic.jackut.model;
-

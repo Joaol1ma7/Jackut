@@ -7,4 +7,3 @@ public class NaoHaRecadosException extends Exception {
         super("Não há recados.");
     }
 }
-

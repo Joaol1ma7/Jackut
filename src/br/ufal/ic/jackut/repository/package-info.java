@@ -4,4 +4,3 @@
  * da serialização dos objetos.
  */
 package br.ufal.ic.jackut.repository;
-

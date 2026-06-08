@@ -9,4 +9,3 @@ public class UsuarioJaAmigoException extends Exception {
         super("Usuário já está adicionado como amigo.");
     }
 }
-

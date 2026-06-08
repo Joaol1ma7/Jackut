@@ -3,4 +3,3 @@
  * erro validado pelas regras de negócio e contém uma mensagem legível.
  */
 package br.ufal.ic.jackut.exceptions;
-

@@ -38,4 +38,3 @@ public interface IUsuarioRepository {
      */
     boolean exists(String login);
 }
-

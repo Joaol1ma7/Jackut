@@ -61,4 +61,3 @@ public interface IUsuarioService {
     /** Persiste os dados e encerra o sistema. */
     void encerrarSistema();
 }
-

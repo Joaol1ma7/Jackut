@@ -7,4 +7,3 @@ public class ContaExistenteException extends Exception {
         super("Conta com esse nome já existe.");
     }
 }
-

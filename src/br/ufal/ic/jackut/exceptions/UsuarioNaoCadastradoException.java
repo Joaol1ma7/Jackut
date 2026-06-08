@@ -9,4 +9,3 @@ public class UsuarioNaoCadastradoException extends Exception {
         super("Usuário não cadastrado.");
     }
 }
-

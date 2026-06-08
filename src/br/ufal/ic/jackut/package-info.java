@@ -3,4 +3,3 @@
  * e classes que orquestram os serviços do domínio.
  */
 package br.ufal.ic.jackut;
-

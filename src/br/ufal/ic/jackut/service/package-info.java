@@ -4,4 +4,3 @@
  * pela {@link br.ufal.ic.jackut.Facade}.
  */
 package br.ufal.ic.jackut.service;
-

@@ -1,83 +1,80 @@
-RELATORIO SOBRE A ARQUITETURA DO PROJETO MYFOOD
+RELATÓRIO SOBRE A ARQUITETURA DO PROJETO
 
-Este projeto utiliza uma arquitetura em camadas.
-O código está organizado em diferentes niveis de responsabilidade, onde cada camada
-faz sua parte e passa o resultado para a próxima.
+Este documento descreve a arquitetura atual do projeto (pacote base: br.ufal.ic.jackut),
+suas camadas, responsabilidades e decisões de projeto adotadas durante as últimas mudanças.
 
 ESTRUTURA PRINCIPAL
 
-A aplicação é dividida em 5 camadas principais:
+A aplicação segue uma arquitetura em camadas com separação clara de responsabilidades.
+As camadas principais são:
 
 1. Camada de Apresentação
-   Aqui ficam os testes do EasyAccept. Essa camada só faz requisições e recebe respostas.
-   
+   - Representada pelos scripts de teste EasyAccept e pela classe `Main` que dispara
+     as suites de testes. Essa camada atua como cliente da API oferecida pela Facade.
 
 2. Camada de Facade
-   A classe Facade é o ponto de entrada único da aplicação.
+   - A classe `br.ufal.ic.jackut.Facade` é o ponto de entrada único para clientes e testes.
+   - A Facade expõe operações de alto nível e delega para o serviço apropriado (`IUsuarioService`).
 
-3. Camada de Lógica de Negócio
-   Aqui ficam as classes Manager: UsuarioManager, EmpresaManager, ProdutoManager e PedidoManager.
-   Cada uma delas sabe como fazer as operações da sua área. Por exemplo, o UsuarioManager sabe
-   como criar um usuário, fazer login e buscar informações. 
+3. Camada de Serviço (Lógica de Negócio)
+   - Implementada por `UsuarioService` (contrato `IUsuarioService`).
+   - Contém validações, regras de negócio e coordena chamadas para o repositório.
+   - Responsabilidades: gerenciamento de usuários, atributos de perfil, pedidos de amizade,
+     recados e validações relacionadas.
 
-4. Camada de Acesso a Dados
-   Aqui ficam os Repositories. Eles definem interfaces para trabalhar com dados.
+4. Camada de Acesso a Dados (Repositório)
+   - Definida pela interface `IUsuarioRepository` e implementada por `UsuarioRepository`.
+   - O repositório mantém o armazenamento em memória durante a execução e é responsável
+     por carregar/salvar o estado para a camada de persistência.
 
 5. Camada de Persistência
-   É onde os dados realmente são salvos e carregados. No caso desse projeto, usa XML.
+   - Implementada com `XMLEncoder` e `XMLDecoder` do Java.
+   - O arquivo de persistência padrão é `jackut_data.xml` (localizado na raiz do projeto).
 
-COMO FUNCIONA NA PRATICA
+FLUXO DE EXECUÇÃO (exemplo: criação de usuário)
 
-Quando um teste chama Facade.criarUsuario(), isso é o que acontece:
+1. Um teste ou cliente chama `Facade.criarUsuario(...)`.
+2. A `Facade` valida parâmetros superficiais e delega para `IUsuarioService.criarUsuario(...)`.
+3. `UsuarioService` aplica validações de negócio e, em caso de sucesso, utiliza `IUsuarioRepository`
+   para persistir o usuário em memória.
+4. `UsuarioRepository` atualiza a estrutura em memória e invoca a persistência (XMLEncoder)
+   para salvar o mapa de usuários em `jackut_data.xml`.
+5. Resultados e exceções são propagados de volta até a `Facade` e então ao cliente.
 
-1. Facade recebe a requisição
-2. Facade chama UsuarioManager.criarUsuario()
-3. UsuarioManager valida os dados através do UsuarioValidator
-4. Se os dados forem válidos, UsuarioManager chama UsuarioRepository.adicionar()
-5. UsuarioRepository salva o usuário em memória e depois pede para PersistenceManager salvar em XML
-6. A resposta volta pelos mesmos passos
+PADRÕES DE PROJETO
 
-PADROES DE DESIGN
+- Facade: fornece API simples e consolidada para clientes e testes.
+- Repository: abstrai o acesso a dados e a persistência (interface `IUsuarioRepository`).
+- Service: encapsula regras de negócio e orquestra repositórios (`IUsuarioService`).
+- Dependency Injection: `UsuarioService` recebe `IUsuarioRepository` por construtor; `Facade`
+  também permite injeção do serviço, facilitando testes e substituições.
 
-O projeto usa alguns padrões conhecidos:
+PRINCÍPIOS SOLID (como foram aplicados)
 
-Facade - Oferece uma interface simples para a aplicação inteira
-Repository - Abstrai como os dados são armazenados
-Manager - Concentra toda lógica de uma entidade em um lugar
-Dependency Injection - Os managers recebem seus repositórios como dependências
+Single Responsibility Principle (SRP)
+  - Cada classe tem responsabilidade única: `Usuario` modela estado do usuário;
+    `UsuarioService` contém regras de negócio; `UsuarioRepository` cuida da persistência;
+    `Facade` expõe a API.
 
-PRINCÍPIOS SOLID
+Open/Closed Principle (OCP)
+  - As classes dependem de abstrações (`IUsuarioService`, `IUsuarioRepository`) e podem ser
+    estendidas com novas implementações sem modificar o código cliente.
 
-O código tenta seguir os princípios SOLID:
+Liskov Substitution Principle (LSP)
+  - Implementações de interfaces preservam o contrato esperado, permitindo substituição.
 
-Single Responsibility - Cada classe tem um trabalho específico
-Open/Closed - É fácil adicionar novas coisas sem quebrar o que já existe
-Liskov Substitution - As implementações respeitam os contratos das interfaces
-Interface Segregation - As interfaces são específicas e não forçam métodos desnecessários
-Dependency Inversion - As classes dependem de abstrações, não de implementações concretas
+Interface Segregation Principle (ISP)
+  - As interfaces são coesas e específicas (`IUsuarioService` concentra operações do domínio
+    de usuário; `IUsuarioRepository` concentra operações de armazenamento).
 
-ESTRUTURA DE PASTAS
+Dependency Inversion Principle (DIP)
+  - Camadas de alto nível (`Facade`, `UsuarioService`) dependem de abstrações, não de implementações
+    concretas. Isso facilita testes e mudanças na persistência.
 
-src/br/ufal/ic/myfood/
-  Facade.java (ponto de entrada)
-  Main.java (roda os testes)
-  models/ (entidades)
-  service/ (classes manager)
-  repositories/ (interfaces e implementações para acesso a dados)
-  persistence/ (gerenciam o XML)
-  validators/ (validam os dados)
-  exceptions/ (define as exceções customizadas)
 
-PERSISTENCIA
+CONCLUSÃO
 
-A persistência usa XMLEncoder e XMLDecoder, que são classes padrão do Java.
-Quando a aplicação reinicia, ela carrega os dados do XML.
+O projeto adota uma arquitetura em camadas com ênfase em separação de responsabilidades
+e inversão de dependência.
 
-Isso permite que os testes de persistência funcionem. Um teste cria dados e depois outro teste
-consegue carregar esses dados sem que eles tenham sido perdidos.
-
-CONCLUSAO
-
-É uma arquitetura bem estruturada que segue os padrões SOLID. O código fica organizado, legível
-e fácil de manter.
 

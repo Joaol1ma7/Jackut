@@ -11,4 +11,3 @@ public class UsuarioNaoPodeEnviarRecadoException extends Exception {
         super("Usuário não pode enviar recado para si mesmo.");
     }
 }
-

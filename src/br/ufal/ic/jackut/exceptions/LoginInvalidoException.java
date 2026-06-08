@@ -7,4 +7,3 @@ public class LoginInvalidoException extends Exception {
         super("Login inválido.");
     }
 }
-
