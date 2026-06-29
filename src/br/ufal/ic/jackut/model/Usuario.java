@@ -25,6 +25,12 @@ public class Usuario implements Serializable {
     private Set<String> pedidosEnviados = new LinkedHashSet<>();
     private Set<String> pedidosRecebidos = new LinkedHashSet<>();
     private Deque<String> recados = new ArrayDeque<>();
+    private Deque<String> mensagens = new ArrayDeque<>();
+    private Set<String> comunidades = new LinkedHashSet<>();
+    private Set<String> idolos = new LinkedHashSet<>();
+    private Set<String> fas = new LinkedHashSet<>();
+    private Set<String> paqueras = new LinkedHashSet<>();
+    private Set<String> inimigos = new LinkedHashSet<>();
 
     /**
      * Cria um usuário com login, senha e nome.
@@ -51,7 +57,14 @@ public class Usuario implements Serializable {
         this.pedidosEnviados = new LinkedHashSet<>();
         this.pedidosRecebidos = new LinkedHashSet<>();
         this.recados = new ArrayDeque<>();
+        this.comunidades = new LinkedHashSet<>();
+        this.mensagens = new ArrayDeque<>();
+        this.idolos = new LinkedHashSet<>();
+        this.fas = new LinkedHashSet<>();
+        this.paqueras = new LinkedHashSet<>();
+        this.inimigos = new LinkedHashSet<>();
     }
+
 
     /** @return login do usuário */
     public String getLogin() { return login; }
@@ -61,7 +74,7 @@ public class Usuario implements Serializable {
     public String getNome() { return nome; }
 
     /**
-     * Define um atributo do perfil (chave -> valor). A chave é normalizada para
+     * Define um atributo do perfil (chave -&gt; valor). A chave é normalizada para
      * minúsculas.
      *
      * @param chave nome do atributo
@@ -204,5 +217,79 @@ public class Usuario implements Serializable {
     public String lerRecado() {
         return recados.pollFirst();
     }
+
+    /** Mensagens de comunidades recebidas pelo usuário. */
+    public void receberMensagem(String mensagem) {
+        if (mensagem == null) mensagem = "";
+        mensagens.addLast(mensagem);
+    }
+
+    public String lerMensagem() {
+        return mensagens.pollFirst();
+    }
+
+    public java.util.List<String> getMensagens() { return new ArrayList<>(mensagens); }
+
+    public void setMensagens(java.util.List<String> mensagensList) { this.mensagens = mensagensList == null ? new ArrayDeque<>() : new ArrayDeque<>(mensagensList); }
+
+    /** Comunidades das quais o usuário faz parte (ordem de ingresso). */
+    public Set<String> getComunidades() { return comunidades; }
+
+    public void setComunidades(Set<String> comunidades) { this.comunidades = comunidades == null ? new LinkedHashSet<>() : comunidades; }
+
+    public void adicionarComunidade(String nomeComunidade) {
+        if (nomeComunidade == null) return;
+        comunidades.add(nomeComunidade);
+    }
+
+    public String getComunidadesString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        boolean first = true;
+        for (String c : comunidades) {
+            if (!first) sb.append(",");
+            sb.append(c);
+            first = false;
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+
+    /**
+     * Retorna os idolos declarados por este usuário.
+     * @return conjunto de logins declarados como idolos
+     */
+    public Set<String> getIdolos() { return idolos; }
+
+    /**
+     * Substitui a coleção de idolos deste usuário (usado por desserialização).
+     */
+    public void setIdolos(Set<String> idolos) { this.idolos = idolos == null ? new LinkedHashSet<>() : idolos; }
+
+    /** Marca localmente outro login como ídolo deste usuário. */
+    public void adicionarIdoloLocal(String idolo) { if (idolo == null) return; idolos.add(idolo); }
+
+    /** Retorna os fãs deste usuário. */
+    public Set<String> getFas() { return fas; }
+
+    /** Substitui a coleção de fãs (usado por desserialização). */
+    public void setFas(Set<String> fas) { this.fas = fas == null ? new LinkedHashSet<>() : fas; }
+
+    /** Adiciona localmente um fã a este usuário. */
+    public void adicionarFaLocal(String fan) { if (fan == null) return; fas.add(fan); }
+
+    /** Paqueras adicionadas por este usuário (privadas). */
+    public Set<String> getPaqueras() { return paqueras; }
+
+    public void setPaqueras(Set<String> paqueras) { this.paqueras = paqueras == null ? new LinkedHashSet<>() : paqueras; }
+
+    public void adicionarPaqueraLocal(String paquera) { if (paquera == null) return; paqueras.add(paquera); }
+
+    /** Inimigos declarados por este usuário. */
+    public Set<String> getInimigos() { return inimigos; }
+
+    public void setInimigos(Set<String> inimigos) { this.inimigos = inimigos == null ? new LinkedHashSet<>() : inimigos; }
+
+    public void adicionarInimigoLocal(String inimigo) { if (inimigo == null) return; inimigos.add(inimigo); }
 }
 

@@ -1,37 +1,80 @@
 package br.ufal.ic.jackut;
 
-import br.ufal.ic.jackut.service.IUsuarioService;
-import br.ufal.ic.jackut.service.UsuarioService;
+import br.ufal.ic.jackut.service.*;
 import br.ufal.ic.jackut.repository.UsuarioRepository;
+import br.ufal.ic.jackut.exceptions.*;
 
 /**
  * Facade que expõe a API pública da aplicação. A implementação delega para
- * um serviço de usuários e mantém contratos simples para os casos de uso.
+ * os serviços especializados e mantém contratos simples para os casos de uso.
  */
 public class Facade {
-	private final IUsuarioService service;
+	private final IUsuarioService usuarioService;
+	private final ISessaoService sessaoService;
+	private final IAmizadeService amizadeService;
+	private final IRecadoService recadoService;
+	private final IComunidadeService comunidadeService;
+	private final IMensagemService mensagemService;
+	private final IRelacionamentoService relacionamentoService;
 
 	/**
-	 * Construtor padrão que cria a stack concreta (serviço + repositório).
+	 * Construtor padrão que cria a stack concreta (serviços + repositório).
 	 */
 	public Facade() {
-		this(new UsuarioService(new UsuarioRepository()));
+		UsuarioRepository repo = new UsuarioRepository();
+		this.usuarioService = new UsuarioService(repo);
+		this.sessaoService = new SessaoService(repo);
+		this.amizadeService = new AmizadeService(repo, sessaoService);
+		this.recadoService = new RecadoService(repo, sessaoService);
+		this.comunidadeService = new ComunidadeService(repo, sessaoService);
+		this.mensagemService = new MensagemService(repo, sessaoService);
+		this.relacionamentoService = new RelacionamentoService(repo, sessaoService);
 	}
 
 	/**
-	 * Construtor que permite injeção do serviço (útil para testes).
+	 * Construtor que permite injeção de todos os serviços (útil para testes).
 	 *
-	 * @param service serviço que implementa as regras de usuário
+	 * @param usuarioService serviço de usuários
+	 * @param sessaoService serviço de sessões
+	 * @param amizadeService serviço de amizades
+	 * @param recadoService serviço de recados
 	 */
-	public Facade(IUsuarioService service) {
-		this.service = service;
+	public Facade(IUsuarioService usuarioService, ISessaoService sessaoService,
+	             IAmizadeService amizadeService, IRecadoService recadoService) {
+		this.usuarioService = usuarioService;
+		this.sessaoService = sessaoService;
+		this.amizadeService = amizadeService;
+		this.recadoService = recadoService;
+		// cria um serviço de comunidades simples ligado a um repositório padrão
+		this.comunidadeService = new ComunidadeService(new UsuarioRepository(), sessaoService);
+		this.mensagemService = new MensagemService(new UsuarioRepository(), sessaoService);
+		this.relacionamentoService = new RelacionamentoService(new UsuarioRepository(), sessaoService);
+	}
+
+	/**
+	 * Construtor que permite injeção de todos os serviços (útil para testes),
+	 * incluindo serviço de comunidades.
+	 */
+	public Facade(IUsuarioService usuarioService, ISessaoService sessaoService,
+	             IAmizadeService amizadeService, IRecadoService recadoService, IComunidadeService comunidadeService) {
+		this.usuarioService = usuarioService;
+		this.sessaoService = sessaoService;
+		this.amizadeService = amizadeService;
+		this.recadoService = recadoService;
+		this.comunidadeService = comunidadeService;
+		this.mensagemService = new MensagemService(new UsuarioRepository(), sessaoService);
+		this.relacionamentoService = new RelacionamentoService(new UsuarioRepository(), sessaoService);
 	}
 
 	/**
 	 * Remove todos os usuários e dados persistidos.
 	 */
 	public void zerarSistema() {
-		service.zerarSistema();
+		usuarioService.zerarSistema();
+		sessaoService.zerarSessoes();
+		amizadeService.zerarAmizades();
+		recadoService.zerarRecados();
+		// comunidades and messages are cleared via respective services/repository
 	}
 
 	/**
@@ -40,10 +83,12 @@ public class Facade {
 	 * @param login login desejado
 	 * @param senha senha do usuário
 	 * @param nome  nome completo (pode ser vazio)
-	 * @throws Exception em casos de validação (login inválido, conta existente, etc.)
+	 * @throws LoginInvalidoException se o login for nulo ou vazio
+	 * @throws SenhaInvalidaException se a senha for nula ou vazia
+	 * @throws ContaExistenteException se o login já estiver em uso
 	 */
-	public void criarUsuario(String login, String senha, String nome) throws Exception {
-		service.criarUsuario(login, senha, nome);
+	public void criarUsuario(String login, String senha, String nome) throws LoginInvalidoException, SenhaInvalidaException, ContaExistenteException {
+		usuarioService.criarUsuario(login, senha, nome);
 	}
 
 	/**
@@ -52,10 +97,11 @@ public class Facade {
 	 * @param login    login do usuário
 	 * @param atributo nome do atributo ("nome", "login", "senha" ou atributo personalizado)
 	 * @return valor do atributo solicitado
-	 * @throws Exception se o usuário não existir ou o atributo não estiver preenchido
+	 * @throws UsuarioNaoCadastradoException se o usuário não existir
+	 * @throws AtributoNaoPreenchidoException se o atributo não estiver preenchido
 	 */
-	public String getAtributoUsuario(String login, String atributo) throws Exception {
-		return service.getAtributoUsuario(login, atributo);
+	public String getAtributoUsuario(String login, String atributo) throws UsuarioNaoCadastradoException, AtributoNaoPreenchidoException {
+		return usuarioService.getAtributoUsuario(login, atributo);
 	}
 
 	/**
@@ -64,10 +110,10 @@ public class Facade {
 	 * @param id      identificador de sessão (login + "-session")
 	 * @param atributo nome do atributo a editar
 	 * @param valor    novo valor do atributo
-	 * @throws Exception se a sessão for inválida ou usuário não existir
+	 * @throws UsuarioNaoCadastradoException se a sessão for inválida ou usuário não existir
 	 */
-	public void editarPerfil(String id, String atributo, String valor) throws Exception {
-		service.editarPerfil(id, atributo, valor);
+	public void editarPerfil(String id, String atributo, String valor) throws UsuarioNaoCadastradoException {
+		usuarioService.editarPerfil(id, atributo, valor);
 	}
 
 	/**
@@ -75,10 +121,13 @@ public class Facade {
 	 *
 	 * @param id    identificador de sessão do remetente
 	 * @param amigo login do usuário alvo
-	 * @throws Exception em casos de validação (usuário inexistente, auto-adicionar, etc.)
+	 * @throws UsuarioNaoCadastradoException se o usuário não existir
+	 * @throws UsuarioNaoPodeAdicionarAmigoException se tentar adicionar a si mesmo
+	 * @throws UsuarioJaAmigoException se já for amigo
+	 * @throws UsuarioJaAdicionadoException se já enviou pedido de amizade
 	 */
-	public void adicionarAmigo(String id, String amigo) throws Exception {
-		service.adicionarAmigo(id, amigo);
+	public void adicionarAmigo(String id, String amigo) throws UsuarioNaoCadastradoException, UsuarioNaoPodeAdicionarAmigoException, UsuarioJaAmigoException, UsuarioJaAdicionadoException, br.ufal.ic.jackut.exceptions.FuncaoInvalidaException {
+		amizadeService.adicionarAmigo(id, amigo);
 	}
 
 	/**
@@ -87,10 +136,10 @@ public class Facade {
 	 * @param login  login do usuário
 	 * @param amigo  login do possível amigo
 	 * @return true se forem amigos, falso caso contrário
-	 * @throws Exception se o usuário não existir
+	 * @throws UsuarioNaoCadastradoException se o usuário não existir
 	 */
-	public boolean ehAmigo(String login, String amigo) throws Exception {
-		return service.ehAmigo(login, amigo);
+	public boolean ehAmigo(String login, String amigo) throws UsuarioNaoCadastradoException {
+		return amizadeService.ehAmigo(login, amigo);
 	}
 
 	/**
@@ -98,10 +147,10 @@ public class Facade {
 	 *
 	 * @param login login do usuário
 	 * @return string com os amigos no formato {a,b}
-	 * @throws Exception se o usuário não existir
+	 * @throws UsuarioNaoCadastradoException se o usuário não existir
 	 */
-	public String getAmigos(String login) throws Exception {
-		return service.getAmigos(login);
+	public String getAmigos(String login) throws UsuarioNaoCadastradoException {
+		return amizadeService.getAmigos(login);
 	}
 
 	/**
@@ -110,10 +159,11 @@ public class Facade {
 	 * @param id          identificador de sessão do remetente
 	 * @param destinatario login do destinatário
 	 * @param recado       texto do recado
-	 * @throws Exception em casos de validação (usuário inexistente, envio para si mesmo, etc.)
+	 * @throws UsuarioNaoCadastradoException se o usuário não existir
+	 * @throws UsuarioNaoPodeEnviarRecadoException se tentar enviar para si mesmo
 	 */
-	public void enviarRecado(String id, String destinatario, String recado) throws Exception {
-		service.enviarRecado(id, destinatario, recado);
+	public void enviarRecado(String id, String destinatario, String recado) throws UsuarioNaoCadastradoException, UsuarioNaoPodeEnviarRecadoException, br.ufal.ic.jackut.exceptions.FuncaoInvalidaException {
+		recadoService.enviarRecado(id, destinatario, recado);
 	}
 
 	/**
@@ -121,10 +171,11 @@ public class Facade {
 	 *
 	 * @param id identificador de sessão
 	 * @return texto do recado
-	 * @throws Exception se não houver recados ou sessão inválida
+	 * @throws UsuarioNaoCadastradoException se a sessão for inválida
+	 * @throws NaoHaRecadosException se não houver recados
 	 */
-	public String lerRecado(String id) throws Exception {
-		return service.lerRecado(id);
+	public String lerRecado(String id) throws UsuarioNaoCadastradoException, NaoHaRecadosException {
+		return recadoService.lerRecado(id);
 	}
 
 	/**
@@ -133,16 +184,87 @@ public class Facade {
 	 * @param login login do usuário
 	 * @param senha senha do usuário
 	 * @return identificador da sessão no formato login-session
-	 * @throws Exception se login/senha inválidos
+	 * @throws LoginSenhaInvalidosException se login/senha inválidos
 	 */
-	public String abrirSessao(String login, String senha) throws Exception {
-		return service.abrirSessao(login, senha);
+	public String abrirSessao(String login, String senha) throws LoginSenhaInvalidosException {
+		return sessaoService.abrirSessao(login, senha);
 	}
 
 	/**
 	 * Persiste os dados e encerra o sistema.
 	 */
 	public void encerrarSistema() {
-		service.encerrarSistema();
+		usuarioService.encerrarSistema();
+	}
+
+	/** Remove a conta do usuário identificado pela sessão. */
+	public void removerUsuario(String idSessao) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException {
+		usuarioService.removerUsuario(idSessao);
+	}
+
+	/* ---------- Casos de uso de mensagens a comunidades (US7) ---------- */
+
+	public void enviarMensagem(String idSessao, String comunidade, String mensagem) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException, br.ufal.ic.jackut.exceptions.ComunidadeInexistenteException {
+		mensagemService.enviarMensagem(idSessao, comunidade, mensagem);
+	}
+
+	public String lerMensagem(String idSessao) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException, br.ufal.ic.jackut.exceptions.NaoHaMensagensException {
+		return mensagemService.lerMensagem(idSessao);
+	}
+
+	/* ---------- Casos de uso de relacionamento (US8) ---------- */
+
+	public void adicionarIdolo(String idSessao, String idolo) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException, br.ufal.ic.jackut.exceptions.UsuarioJaIdoloException, br.ufal.ic.jackut.exceptions.UsuarioNaoPodeSerFaDeSiMesmoException, br.ufal.ic.jackut.exceptions.FuncaoInvalidaException {
+		relacionamentoService.adicionarIdolo(idSessao, idolo);
+	}
+
+	public boolean ehFa(String login, String idolo) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException {
+		return relacionamentoService.ehFa(login, idolo);
+	}
+
+	public String getFas(String login) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException {
+		return relacionamentoService.getFas(login);
+	}
+
+	public void adicionarPaquera(String idSessao, String paquera) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException, br.ufal.ic.jackut.exceptions.UsuarioJaPaqueraException, br.ufal.ic.jackut.exceptions.UsuarioNaoPodeSerPaqueraDeSiMesmoException, br.ufal.ic.jackut.exceptions.FuncaoInvalidaException {
+		relacionamentoService.adicionarPaquera(idSessao, paquera);
+	}
+
+	public boolean ehPaquera(String idSessao, String paquera) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException {
+		return relacionamentoService.ehPaquera(idSessao, paquera);
+	}
+
+	public String getPaqueras(String idSessao) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException {
+		return relacionamentoService.getPaqueras(idSessao);
+	}
+
+	public void adicionarInimigo(String idSessao, String inimigo) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException, br.ufal.ic.jackut.exceptions.UsuarioJaInimigoException, br.ufal.ic.jackut.exceptions.UsuarioNaoPodeSerInimigoDeSiMesmoException {
+		relacionamentoService.adicionarInimigo(idSessao, inimigo);
+	}
+
+	/* ---------- Casos de uso de comunidades (US5) ---------- */
+
+	public void criarComunidade(String idSessao, String nome, String descricao) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException, br.ufal.ic.jackut.exceptions.ComunidadeExistenteException {
+		comunidadeService.criarComunidade(idSessao, nome, descricao);
+	}
+
+	public String getDescricaoComunidade(String nome) throws br.ufal.ic.jackut.exceptions.ComunidadeInexistenteException {
+		return comunidadeService.getDescricaoComunidade(nome);
+	}
+
+	public String getDonoComunidade(String nome) throws br.ufal.ic.jackut.exceptions.ComunidadeInexistenteException {
+		return comunidadeService.getDonoComunidade(nome);
+	}
+
+	public String getMembrosComunidade(String nome) throws br.ufal.ic.jackut.exceptions.ComunidadeInexistenteException {
+		return comunidadeService.getMembrosComunidade(nome);
+	}
+
+	public void adicionarComunidade(String idSessao, String nome) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException, br.ufal.ic.jackut.exceptions.ComunidadeInexistenteException, br.ufal.ic.jackut.exceptions.UsuarioJaMembroComunidadeException {
+		comunidadeService.adicionarComunidade(idSessao, nome);
+	}
+
+	public String getComunidades(String idOuSessao) throws br.ufal.ic.jackut.exceptions.UsuarioNaoCadastradoException {
+		return comunidadeService.getComunidades(idOuSessao);
 	}
 }

@@ -1,12 +1,13 @@
 package br.ufal.ic.jackut.repository;
 
 import br.ufal.ic.jackut.model.Usuario;
+import br.ufal.ic.jackut.model.Comunidade;
 
 import java.util.Map;
 
 /**
- * Contrato para repositório de usuários. Fornece operações básicas de
- * persistência e busca.
+ * Contrato para repositório de usuários e comunidades. Fornece operações
+ * básicas de persistência e busca.
  */
 public interface IUsuarioRepository {
     /** Persiste os dados atuais para o armazenamento permanente. */
@@ -37,4 +38,30 @@ public interface IUsuarioRepository {
      * @return true se existir, false caso contrário
      */
     boolean exists(String login);
+
+    /**
+     * Adiciona uma comunidade ao repositório.
+     * @param c comunidade a ser adicionada
+     */
+    void addComunidade(Comunidade c);
+
+    /**
+     * Recupera uma comunidade pelo nome.
+     * @param nome nome da comunidade
+     * @return instância de Comunidade ou null se não existir
+     */
+    Comunidade getComunidade(String nome);
+
+    /**
+     * Verifica existência de comunidade pelo nome.
+     * @param nome nome da comunidade
+     * @return true se existir
+     */
+    boolean existsComunidade(String nome);
+
+    /**
+     * Remove um usuário do repositório (cascata: limpa relacionamentos e participações).
+     * @param login login do usuário a remover
+     */
+    void removeUsuario(String login);
 }

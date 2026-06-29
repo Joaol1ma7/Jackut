@@ -1,47 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <java version="25.0.2" class="java.beans.XMLDecoder">
- <object class="java.util.HashMap">
-  <void method="put">
-   <string>jdoe</string>
-   <object class="br.ufal.ic.jackut.model.Usuario">
-    <void property="login">
-     <string>jdoe</string>
-    </void>
-    <void property="nome">
-     <string>John Doe</string>
-    </void>
-    <void property="senha">
-     <string>abc</string>
-    </void>
-   </object>
-  </void>
-  <void method="put">
-   <string>jpsauve</string>
-   <object class="br.ufal.ic.jackut.model.Usuario">
-    <void property="login">
-     <string>jpsauve</string>
-    </void>
-    <void property="nome">
-     <string>Jacques Sauve</string>
-    </void>
-    <void property="senha">
-     <string>sauvejp</string>
-    </void>
-   </object>
-  </void>
-  <void method="put">
-   <string>oabath</string>
-   <object class="br.ufal.ic.jackut.model.Usuario">
-    <void property="login">
-     <string>oabath</string>
-    </void>
-    <void property="nome">
-     <string>Osorio Abath</string>
-    </void>
-    <void property="senha">
-     <string>abatho</string>
-    </void>
-   </object>
+ <object class="br.ufal.ic.jackut.repository.PersistedData" id="PersistedData0">
+  <void property="usuarios">
+   <void method="put">
+    <string>oabath</string>
+    <object class="br.ufal.ic.jackut.model.Usuario">
+     <void property="login">
+      <string>oabath</string>
+     </void>
+     <void property="nome">
+      <string>Osorio Abath</string>
+     </void>
+     <void property="senha">
+      <string>abatho</string>
+     </void>
+    </object>
+   </void>
   </void>
  </object>
 </java>

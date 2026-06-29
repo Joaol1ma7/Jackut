@@ -15,9 +15,11 @@ public interface IUsuarioService {
      * @param login login desejado
      * @param senha senha do usuário
      * @param nome  nome completo (pode ser vazio)
-     * @throws Exception em caso de validação
+     * @throws LoginInvalidoException se o login for nulo ou vazio
+     * @throws SenhaInvalidaException se a senha for nula ou vazia
+     * @throws ContaExistenteException se o login já estiver em uso
      */
-    void criarUsuario(String login, String senha, String nome) throws Exception;
+    void criarUsuario(String login, String senha, String nome) throws LoginInvalidoException, SenhaInvalidaException, ContaExistenteException;
 
     /**
      * Obtém um atributo do usuário.
@@ -25,39 +27,22 @@ public interface IUsuarioService {
      * @param login    login do usuário
      * @param atributo nome do atributo
      * @return valor do atributo
-     * @throws Exception se houver erro/validação
+     * @throws UsuarioNaoCadastradoException se o usuário não existir
+     * @throws AtributoNaoPreenchidoException se o atributo personalizado não estiver preenchido
      */
-    String getAtributoUsuario(String login, String atributo) throws Exception;
+    String getAtributoUsuario(String login, String atributo) throws UsuarioNaoCadastradoException, AtributoNaoPreenchidoException;
 
     /**
      * Edita um atributo do perfil usando id de sessão.
-     */
-    void editarPerfil(String idSessao, String atributo, String valor) throws Exception;
-
-    /**
-     * Cria ou aceita pedidos de amizade.
-     */
-    void adicionarAmigo(String idSessao, String amigo) throws Exception;
-
-    /** Verifica se dois usuários são amigos. */
-    boolean ehAmigo(String login, String amigo) throws Exception;
-
-    /** Retorna amigos no formato esperado pelos testes. */
-    String getAmigos(String login) throws Exception;
-
-    /** Envia um recado para outro usuário. */
-    void enviarRecado(String idSessao, String destinatario, String recado) throws Exception;
-
-    /** Lê o próximo recado do usuário. */
-    String lerRecado(String idSessao) throws Exception;
-
-    /**
-     * Abre sessão para login/senha.
      *
-     * @return identificador de sessão
+     * @throws UsuarioNaoCadastradoException se o usuário não existir
      */
-    String abrirSessao(String login, String senha) throws Exception;
+    void editarPerfil(String idSessao, String atributo, String valor) throws UsuarioNaoCadastradoException;
+
 
     /** Persiste os dados e encerra o sistema. */
     void encerrarSistema();
+
+    /** Remove a conta do usuário identificado pela sessão. */
+    void removerUsuario(String idSessao) throws UsuarioNaoCadastradoException;
 }
