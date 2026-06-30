@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"br.ufal.ic.jackut"},{"l":"br.ufal.ic.jackut.exceptions"},{"l":"br.ufal.ic.jackut.model"},{"l":"br.ufal.ic.jackut.repository"},{"l":"br.ufal.ic.jackut.service"}]
